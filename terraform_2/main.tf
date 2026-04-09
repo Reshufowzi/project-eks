@@ -3,13 +3,15 @@ provider "aws" {
 }
 
 module "eks" {
-  source       = "./modules/eks"
-  cluster_name = var.cluster_name
+  source = "./modules/eks"
+
+  cluster_name        = var.cluster_name
+  node_instance_type  = var.node_instance_type
 }
 
 # Store cluster name in SSM
-resource "aws_ssm_parameter" "cluster_name" {
-  name  = "/eks/staging/cluster_name"
+resource "aws_ssm_parameter" "eks_cluster_name" {
+  name  = "/eks/cluster_name"
   type  = "String"
-  value = var.cluster_name
+  value = module.eks.cluster_name
 }
