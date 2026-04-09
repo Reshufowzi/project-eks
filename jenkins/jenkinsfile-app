@@ -3,6 +3,9 @@ pipeline {
 
   environment {
     AWS_REGION = "ap-south-1"
+    DOCKERHUB_USERNAME = "your-dockerhub-username"
+    IMAGE_NAME = "devops-app"
+    BUILD_TAG = "${BUILD_NUMBER}"
   }
 
   stages {
@@ -29,14 +32,20 @@ pipeline {
     stage('Build Docker Image') {
       steps {
         dir('app') {
-          sh 'docker build -t your-dockerhub/devops-app:latest .'
+          sh """
+          docker build -t $DOCKERHUB_USERNAME/$IMAGE_NAME:$BUILD_TAG .
+          docker build -t $DOCKERHUB_USERNAME/$IMAGE_NAME:latest .
+          """
         }
       }
     }
 
     stage('Push Docker Image') {
       steps {
-        sh 'docker push your-dockerhub/devops-app:latest'
+        sh """
+        docker push $DOCKERHUB_USERNAME/$IMAGE_NAME:$BUILD_TAG
+        docker push $DOCKERHUB_USERNAME/$IMAGE_NAME:latest
+        """
       }
     }
 
@@ -45,8 +54,11 @@ pipeline {
         sh "aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME"
 
         dir('app/k8s') {
-          sh 'kubectl apply -f deployment.yaml'
-          sh 'kubectl apply -f service.yaml'
+          sh """
+          sed -i 's|IMAGE_TAG|$BUILD_TAG|g' deployment.yaml
+          kubectl apply -f deployment.yaml
+          kubectl apply -f service.yaml
+          """
         }
       }
     }
