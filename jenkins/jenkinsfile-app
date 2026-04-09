@@ -1,0 +1,59 @@
+pipeline {
+  agent any
+
+  environment {
+    AWS_REGION = "ap-south-1"
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        git 'https://github.com/your-repo/devops-project.git'
+      }
+    }
+
+    stage('Get Cluster Name from SSM') {
+      steps {
+        script {
+          CLUSTER_NAME = sh(
+            script: "aws ssm get-parameter --name /eks/cluster_name --query Parameter.Value --output text",
+            returnStdout: true
+          ).trim()
+        }
+      }
+    }
+
+    stage('Build App') {
+      steps {
+        dir('app') {
+          sh 'mvn clean package'
+        }
+      }
+    }
+
+    stage('Build Docker Image') {
+      steps {
+        dir('app') {
+          sh 'docker build -t your-dockerhub/devops-app:latest .'
+        }
+      }
+    }
+
+    stage('Push Docker Image') {
+      steps {
+        sh 'docker push your-dockerhub/devops-app:latest'
+      }
+    }
+
+    stage('Deploy to EKS') {
+      steps {
+        sh "aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME"
+
+        dir('app/k8s') {
+          sh 'kubectl apply -f deployment.yaml'
+          sh 'kubectl apply -f service.yaml'
+        }
+      }
+    }
+  }
+}
