@@ -56,3 +56,22 @@ aws eks update-kubeconfig
 kubectl deploy
 
 ```
+```
+Terraform Pipeline
+   ↓
+Creates EKS Cluster (example: dev-eks-cluster)
+   ↓
+Stores in SSM:
+/eks/cluster_name = dev-eks-cluster
+   ↓
+----------------------------
+Jenkins Pipeline
+   ↓
+Reads from SSM
+   ↓
+CLUSTER_NAME = dev-eks-cluster
+   ↓
+Uses it here:
+aws eks update-kubeconfig --name dev-eks-cluster
+
+```
