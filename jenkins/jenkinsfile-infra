@@ -2,15 +2,10 @@ pipeline {
   agent any
 
   stages {
-    stage('Checkout') {
-      steps {
-        git 'https://github.com/your-repo/devops-project.git'
-      }
-    }
 
     stage('Terraform Init') {
       steps {
-        dir('terraform') {
+        dir('terraform_2') {
           sh 'terraform init'
         }
       }
@@ -18,8 +13,8 @@ pipeline {
 
     stage('Terraform Apply') {
       steps {
-        dir('terraform') {
-          sh 'terraform apply -auto-approve -var-file=envs/staging.tfvars'
+        dir('terraform_2') {
+          sh 'terraform apply -auto-approve'
         }
       }
     }
